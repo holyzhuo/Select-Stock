@@ -35,6 +35,7 @@ def getMeanROE(stock):
     result_profit['dupontROE'] = result_profit['dupontROE'].astype(float)
     return result_profit['dupontROE'].mean()
 
+
 def getHistoryKDataQuery(stock):
     rs = bs.query_history_k_data_plus(stock['code'],
                                       "date,code,close,peTTM,pbMRQ,psTTM",
@@ -77,7 +78,6 @@ stocks[['peTTM', 'pbMRQ']] = stocks.apply(getHistoryKData, axis=1, result_type="
 
 # 筛选基本面
 # roe 在 [0.15, 0.25]
-print (stocks)
 stocks = stocks[(stocks.roe > 0.15) & (stocks.roe < 0.25)]
 
 # 滚动市盈率 peTTM < 45
@@ -90,14 +90,10 @@ stocks = stocks[stocks.pbMRQ < 10]
 max_min_scaler = lambda x: (x - np.min(x)) / (np.max(x) - np.min(x))
 stocks[['roe', 'peTTM', 'pbMRQ']] = stocks[['roe', 'peTTM', 'pbMRQ']].apply(max_min_scaler)  # 按列
 
-# print (stocks)
+# 计算分数
+stocks["score"] = stocks[['roe', 'peTTM', 'pbMRQ']].apply(lambda x: x["roe"] - x["peTTM"] - x["pbMRQ"], axis=1)
 
-# 计算总和
-stocks['score'] = stocks[['roe', 'peTTM', 'pbMRQ']].apply(lambda x: x.sum(), axis=1)
-# print (stocks)
-
-stocks = stocks.sort_values(by=['score'], ascending=True)
-# print (stocks)
+stocks = stocks.sort_values(by=['score'], ascending=False)
 
 stocks.to_csv("./filter_stocks.csv", encoding="utf_8_sig", index=False)
 
